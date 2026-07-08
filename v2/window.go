@@ -711,33 +711,49 @@ func (w *Window) interceptMessage(msg *w32.MSG) bool {
 		focus := uintptr(w32.GetFocus())
 		cur := func() int {
 			for i := range w.controls {
-				if w.controls[i].Handle() == focus {
+				// Fix: Add defensive nil check for w.controls[i] to prevent nil pointer dereference
+				if w.controls[i] != nil && w.controls[i].Handle() == focus {
 					return i
 				}
 			}
 			return -1
 		}()
-		if cur != -1 && w.controls[cur].eatsTabs() {
+		// Fix: Add defensive nil check for w.controls[cur]
+		if cur != -1 && w.controls[cur] != nil && w.controls[cur].eatsTabs() {
 			return false
 		}
 		shiftDown := w32.GetKeyState(w32.VK_SHIFT)&0x8000 != 0
 		nth := func(i int) int {
+			if len(w.controls) == 0 {
+				return -1
+			}
 			return (cur + 1 + i) % len(w.controls)
 		}
 		if shiftDown {
 			nth = func(i int) int {
-				return (cur + len(w.controls) - 1 - i) % len(w.controls)
+				if len(w.controls) == 0 {
+					return -1
+				}
+				// Fix: Protect against negative index during Shift+Tab when no control has focus (cur == -1)
+				idx := (cur + len(w.controls) - 1 - i) % len(w.controls)
+				if idx < 0 {
+					idx += len(w.controls)
+				}
+				return idx
 			}
 		}
 		for i := range w.controls {
 			j := nth(i)
-			if w.controls[j].Parent() != nil &&
-				w.controls[j].canFocus() &&
-				Visible(w.controls[j]) &&
-				Enabled(w.controls[j]) {
-				w32.SetFocus(w32.HWND(w.controls[j].Handle()))
-				w.controls[j].wasFocussedWithTab()
-				return true
+			// Fix: Validate bounds and verify control is non-nil before accessing properties
+			if j >= 0 && j < len(w.controls) && w.controls[j] != nil {
+				if w.controls[j].Parent() != nil &&
+					w.controls[j].canFocus() &&
+					Visible(w.controls[j]) &&
+					Enabled(w.controls[j]) {
+					w32.SetFocus(w32.HWND(w.controls[j].Handle()))
+					w.controls[j].wasFocussedWithTab()
+					return true
+				}
 			}
 		}
 		return true
