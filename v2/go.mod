@@ -1,4 +1,4 @@
-module github.com/gonutz/wui/v2
+module github.com/cacinghidup/wui/v2
 
 go 1.11
 

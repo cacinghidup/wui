@@ -15,8 +15,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/cacinghidup/wui/v2"
 	"github.com/gonutz/w32/v2"
-	"github.com/gonutz/wui/v2"
 )
 
 // TODO Have color property for window background.

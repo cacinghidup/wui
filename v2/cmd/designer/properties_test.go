@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
+	"github.com/cacinghidup/wui/v2"
 	"github.com/gonutz/check"
-	"github.com/gonutz/wui/v2"
 )
 
 func TestButtonPropertyGeneration(t *testing.T) {
